@@ -2,17 +2,21 @@ import time
 
 class Robot:
 
-    def __init__(self, x: float, y: float, speed: float = 1):
+    def __init__(self, x: float, y: float, speed: float = 0.05): #units of m/s
         self.x = x
         self.y = y    
         self.wheel_handler = WheelHandler()
         self.speed = speed
 
+
+    # the robot deconstructs, based off a final destination, the required horizontal/vertical movements to reach it.
     def move(self, x: float, y: float):
         # generate list of intermediate points
         pass
     
-    def _move_to_points(self, points: list[tuple[float, float]]):
+
+    # the robot uses the list of points calcualted above and moves to them
+    def _move_to_points(self, points: list[tuple[float, float]]):  
         for point in points:
             x = point[0]
             y = point[1]
@@ -35,38 +39,28 @@ class Robot:
         self.x += distance
     
     def _move_wheels(self, distance, wheel_types: list[str]):
-        for wheel_type in wheel_types:
-            self.wheel_handler.buffer_wheel_speed_changes(self.speed, wheel_type)
-        self.wheel_handler.commit_speed_changes()
+        self.wheel_handler.change_speeds({wheel_type: self.speed for wheel_type in wheel_types})
         time.sleep(distance/self.speed)
-        for wheel_type in wheel_types:
-            self.wheel_handler.buffer_wheel_speed_changes(0, wheel_type)
-        self.wheel_handler.commit_speed_changes()
+        self.wheel_handler.change_speeds({wheel_type: 0 for wheel_type in wheel_types})
 
 class WheelHandler:
 
     @staticmethod
-    def convert_speed_to_pwm(speed: float) -> int:
-        pass
+    def convert_speed_to_pwm(speed: float) -> int:         #static method of class WheelHandler made to convert from m/s to pwm value
+        return 1 if speed != 0 else 0
 
-    def __init__(self):
-        self.buffer = {
+    def __init__(self):                                    #properties of the wheel handler class - the desired speeds to be pushed to the wheeels
+        self.default_speeds = {
             "triangle": 0,
             "square": 0,
             "circle": 0,
             "plus": 0,
         }
     
-    def buffer_wheel_speed_changes(self, speed: float, wheel_type):
-        self.buffer[wheel_type] = speed
-    
-    def commit_speed_changes(self):
-        triange_pwm = WheelHandler.convert_speed_to_pwm(self.buffer['triange'])
+    def change_speeds(self, updating_speeds: dict[str: float]):
+        new_pwms = {wheel_type: WheelHandler.convert_speed_to_pwm(speed) for wheel_type, speed in (self.default_speeds | updating_speeds).items()}
         # build the instruction string
+        print(new_pwms)
         # send instruction
-        self.buffer = {
-            "triangle": 0,
-            "square": 0,
-            "circle": 0,
-            "plus": 0,
-        }
+
+
